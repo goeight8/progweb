@@ -1,29 +1,62 @@
-<?php $this->session->userdata('logged_in'); ?>
+<?php
+defined('BASEPATH') OR exit('No direct script access allowed');
 
-<body>
-<!-- header -->
-	<?php include 'header.php'; ?>
-<!-- //header -->
+class login extends CI_Controller {
+
+	public function index()
+	{
+		$form_data = $this->input->post('data');
+        if (!empty($form_data)){
+            if ($this->m_login->login($form_data['username'], $form_data['password']))
+            {
+                    redirect('login/admin');
+            }
+            else
+            {
+                redirect('login');
+            }
+        }else{
+            if ($this->session->userdata('group') == 'admin') {
+                    redirect('admin');
+                }
+        }
+
+        $this->load->view('login');
+    
+	}
+    public function cek_login()
+    {
+        $data = array("admin",
+        $this->input->post('username'),
+        $this->input->post('password'));
+        $this->load->model('m_login');
+        $record = $this->m_login->cek($data);
+        
+        if($record==0){
+            $this->index();
+        }else{
+            $this->session->set_userdata(array('username'=>$data[1]));
+            $this->session->set_userdata(array('group'=>$data[0]));
+            redirect('admin');
+        }
+    }
 
 
-<!-- login -->
-	<div class="login">
-		<div class="container">
-			<h3>Selamat Datang.<br><Br> LOGIN ADMIN</H3>
+    function admin()
+    {
+        if ($this->session->userdata('logged_in')) 
+        {
+                $this->load->view('home_admin');
+            }
 
-			<form action="<?php echo base_url();?>login/cek_login" method="post">
-				<input type="text" name="username" value="User Name" onfocus="this.value = '';" onblur="if (this.value == '') {this.value = 'User Name';}"> <br>
-				<input type="password" name="password" class="lock" value="Password" onfocus="this.value = '';" onblur="if (this.value == '') {this.value = 'Password';}"><br>
-				<div class="remember">
-					 
-					<div class="clearfix"> </div>
-				</div><br><br>
-				<input type="submit"  name="login" value="Login">
-			</form>
-	
-			<div class="agile_back_home">
-				<a href="<?php echo base_url();?>">back to home</a>
-			</div>
-		</div>
-	</div>
-<!-- //logi
+        else
+        {
+            redirect('login/login');
+        }
+    }
+
+    function logout(){
+        $this->session->sess_destroy();;
+        redirect('login');
+    }
+}
